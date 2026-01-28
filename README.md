@@ -5,7 +5,7 @@
 
 
 VSC Typing Animation is a **Python GUI tool** that records your code as a typing animation in a VS Code-like interface.  
-It supports multiple programming languages with **syntax highlighting**.
+It supports multiple programming languages with some **syntax highlighting**.
 
 ⚠ **Important Warning:**  
 The program **does not filter file types**. It will try to open **any file you add**, including large files like videos or binaries.  
