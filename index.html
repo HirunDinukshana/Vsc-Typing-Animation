@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VS Code Typing Animation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        ::-webkit-scrollbar {
+          width: 10px;
+          height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.15);
+          border-radius: 8px;
+          border: 2px solid transparent;
+          background-clip: content-box;
+          transition: background 0.2s, transform 0.2s;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.3);
+          transform: scale(1.1);
+        }
+
+        ::-webkit-scrollbar-thumb:active {
+          background: rgba(255, 255, 255, 0.4);
+        }
+
+        html {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+        }
+
+        html:hover {
+          scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+        }
+
+        body {
+            font-family: 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .title-bar {
+            background: #2d2d30;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            user-select: none;
+        }
+
+        .title-bar-left {
+            display: flex;
+            height: 30px;
+            align-items: center;
+            width: 100%;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 8px;
+            height: max-content;
+            width: max-content;
+        }
+        
+        .window-control {
+            margin-left: 8px;
+            width: max-content;
+            height: max-content;
+            cursor: pointer;
+        }
+        .window-control:hover{
+            filter: brightness(120%);
+        }
+
+        .title-bar-title {
+            font-size: 12px;
+            color: #cccccc;
+        }
+
+        .menu-bar {
+            background: #2d2d30;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            border-bottom: 1px solid #3e3e42;
+            font-size: 13px;
+        }
+
+        .menu-item {
+            padding: 0 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .menu-item:hover {
+            background: #3e3e42;
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 77px);
+        }
+
+        .sidebar {
+            width: 220px;
+            background: #252526;
+            border-right: 1px solid #3e3e42;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 10px;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #969696;
+            border-bottom: 1px solid #3e3e42;
+            font-weight: 600;
+        }
+
+        .file-tree {
+            flex: 1;
+            padding: 5px 0;
+        }
+
+        .file-item {
+            padding: 5px 10px 5px 20px;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .file-item:hover {
+            background: #2a2d2e;
+        }
+
+        .file-item.active {
+            background: #37373d;
+            border-left: 2px solid #007acc;
+        }
+
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #1e1e1e;
+        }
+
+        .tabs {
+            background: #252526;
+            display: flex;
+            height: 35px;
+            align-items: flex-end;
+            border-bottom: 1px solid #3e3e42;
+        }
+
+        .tab {
+            background: #2d2d30;
+            padding: 8px 16px;
+            border: 1px solid #3e3e42;
+            border-bottom: none;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 2px;
+            border-radius: 4px 4px 0 0;
+        }
+        .tab:hover{
+            filter: brightness(120%);
+        }
+        .tab.active {
+            background: #1e1e1e;
+            color: #ffffff;
+        }
+
+        .tab-close {
+            font-size: 16px;
+            opacity: 0.7;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+
+        .tab-close:hover {
+            opacity: 1;
+        }
+
+        .editor {
+            flex: 1;
+            display: flex;
+            overflow: auto;
+        }
+
+        .line-numbers {
+            background: #1e1e1e;
+            color: #858585;
+            padding: 15px 10px;
+            display: flex;
+            flex-direction: column;
+            text-align: right;
+            border-right: 1px solid #3e3e42;
+            user-select: none;
+            font-size: 14px;
+            line-height: 21px;
+            min-width: 50px;
+        }
+
+        .code-content {
+            flex: 1;
+            padding: 15px;
+            font-size: 14px;
+            line-height: 21px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
+
+        .terminal {
+            height: 200px;
+            background: #1e1e1e;
+            border-top: 1px solid #3e3e42;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-header {
+            background: #2d2d30;
+            padding: 5px 10px;
+            font-size: 12px;
+            color: #cccccc;
+            border-bottom: 1px solid #3e3e42;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .terminal-content {
+            flex: 1;
+            padding: 10px;
+            font-size: 13px;
+            overflow-y: auto;
+            font-family: 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
+
+        .terminal-input {
+            display: flex;
+            align-items: center;
+            padding: 5px 10px;
+            border-top: 1px solid #3e3e42;
+        }
+
+        .terminal-prompt {
+            color: #4ec9b0;
+            margin-right: 8px;
+        }
+
+        .terminal-input-field {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #d4d4d4;
+            outline: none;
+            font-family: inherit;
+            font-size: 13px;
+        }
+
+        .control-panel {
+            position: fixed;
+            bottom: 230px;
+            right: 20px;
+            background: #2d2d30;
+            border: 1px solid #3e3e42;
+            border-radius: 6px;
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .control-panel h3 {
+            font-size: 12px;
+            color: #cccccc;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .text-input {
+            width: 300px;
+            height: 100px;
+            background: #1e1e1e;
+            border: 1px solid #3e3e42;
+            color: #d4d4d4;
+            padding: 8px;
+            font-family: 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            resize: vertical;
+            border-radius: 4px;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #007acc;
+        }
+
+        .btn-submit {
+            margin-top: 10px;
+            width: 100%;
+            padding: 8px;
+            background: #007acc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-submit:hover {
+            background: #005a9e;
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        .typing-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 18px;
+            background: #d4d4d4;
+            animation: blink 1s infinite;
+            vertical-align: text-bottom;
+            margin-left: 1px;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .kw { color: #569cd6; font-weight: 500; }
+        .str { color: #ce9178; }
+        .cmt { color: #6a9955; font-style: italic; }
+        .fn { color: #dcdcaa; }
+        .num { color: #b5cea8; }
+        .var { color: #9cdcfe; }
+        .prop { color: #9cdcfe; }
+
+        .status-bar {
+            background: #007acc;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            font-size: 12px;
+            color: white;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 999;
+        }
+
+        .status-item {
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .status-item input{
+            background: none;
+            outline: none;
+            border: none;
+            color: white;
+            border-bottom: 1px solid white;
+        }
+        .status-item.right {
+            margin-left: auto;
+            margin-right: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="title-bar">
+        <div class="title-bar-left">
+            <span class="title-bar-title">Visual Studio Code</span>
+            <div class="window-controls">
+                <div onclick="app_minimize()" class="window-control minimize">—</div>
+                <div onclick="app_maximize()" class="window-control maximize">☐</div>
+                <div onclick="app_close()" class="window-control close">✕</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="menu-bar">
+        <div class="menu-item">File</div>
+        <div class="menu-item">Edit</div>
+        <div class="menu-item">View</div>
+        <div class="menu-item">Go</div>
+        <div class="menu-item">Run</div>
+        <div class="menu-item">Terminal</div>
+        <div class="menu-item">Help</div>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-header">Explorer</div>
+            <div class="file-tree">
+            </div>
+        </div>
+
+        <div class="editor-container">
+            <div class="tabs">
+            </div>
+            <div class="editor">
+                <div class="line-numbers" id="lineNumbers">1</div>
+                <div class="code-content" id="codeContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="terminal">
+        <div class="terminal-header">
+            <span>⚡ TERMINAL</span>
+            <span>PowerShell</span>
+        </div>
+        <div class="terminal-content">
+            <div>PS C:\Users\Developer\project> npm start</div>
+            <div style="color: #4ec9b0;">> project@1.0.0 start</div>
+            <div style="color: #4ec9b0;">> node index.js</div>
+            <div style="color: #ce9178;">✓ Server running on port 3000...</div>
+        </div>
+        <div class="terminal-input">
+            <span class="terminal-prompt">PS C:\Users\Developer\project></span>
+            <input type="text" class="terminal-input-field" placeholder="Type command...">
+        </div>
+    </div>
+    <div style="display: none;" class="control-panel">
+        <h3>💻 Add Code</h3>
+        <textarea class="text-input" id="codeInput" placeholder="Enter your code here...&#10;Example:&#10;function hello() {&#10;    console.log('Hello World!');&#10;}"></textarea>
+        <button class="btn-submit" onclick="startTypingAnimation()">▶ Type Code</button>
+    </div>
+
+    <div class="status-bar">
+        <div class="status-item">
+            <span>🔍</span>
+            <span>Go to File</span>
+        </div>
+        <div class="status-item">
+            <span>✓</span>
+            <span>Git: main</span>
+        </div>
+        <div class="status-item right">
+            <span id="lineCol">Ln 1, Col 1</span>
+        </div>
+        <div class="status-item right">
+            <span>Spaces: 4</span>
+        </div>
+        <div class="status-item right">
+            <span>UTF-8</span>
+        </div>
+        <div class="status-item right">
+            <span>speed:</span>
+            <input id="speedIn" type="text" value="10">
+        </div>
+    </div>
+
+<script>
+
+function app_close(){
+    window.pywebview.api.app_close()
+}
+
+function app_minimize(){
+    window.pywebview.api.app_minimize()
+}
+
+function app_maximize(){
+    window.pywebview.api.app_maximize()
+}
+
+let isTyping = false;
+let plainText = "";
+let typingSession = 0
+
+function tokenize(code) {
+    const tokens = [];
+    let i = 0;
+    
+    const keywords = new Set(['function', 'const', 'let', 'var', 'if', 'else', 'for', 'while', 'do', 'return', 'class', 'extends', 'import', 'export', 'default', 'async', 'await', 'new', 'this', 'try', 'catch', 'finally', 'throw', 'break', 'continue', 'switch', 'case']);
+    const builtins = new Set(['console', 'document', 'window', 'Math', 'Array', 'Object', 'String', 'Number', 'Boolean', 'Date', 'Promise']);
+    
+    while (i < code.length) {
+        if (code[i] === '/' && code[i+1] === '/') {
+            let end = code.indexOf('\n', i);
+            if (end === -1) end = code.length;
+            tokens.push({ type: 'cmt', value: code.substring(i, end) });
+            i = end;
+            continue;
+        }
+        
+        if (code[i] === '"' || code[i] === "'" || code[i] === '`') {
+            const quote = code[i];
+            let j = i + 1;
+            while (j < code.length && code[j] !== quote) {
+                if (code[j] === '\\') j++;
+                j++;
+            }
+            tokens.push({ type: 'str', value: code.substring(i, j + 1) });
+            i = j + 1;
+            continue;
+        }
+
+        if (/\d/.test(code[i])) {
+            let j = i;
+            while (j < code.length && /[\d.]/.test(code[j])) j++;
+            tokens.push({ type: 'num', value: code.substring(i, j) });
+            i = j;
+            continue;
+        }
+        
+
+        if (/[a-zA-Z_$]/.test(code[i])) {
+            let j = i;
+            while (j < code.length && /[a-zA-Z0-9_$]/.test(code[j])) j++;
+            const word = code.substring(i, j);
+            
+
+            let k = j;
+            while (k < code.length && /\s/.test(code[k])) k++;
+            
+            if (keywords.has(word)) {
+                tokens.push({ type: 'kw', value: word });
+            } else if (builtins.has(word)) {
+                tokens.push({ type: 'var', value: word });
+            } else if (code[k] === '(') {
+                tokens.push({ type: 'fn', value: word });
+            } else {
+                tokens.push({ type: 'plain', value: word });
+            }
+            i = j;
+            continue;
+        }
+        
+        tokens.push({ type: 'plain', value: code[i] });
+        i++;
+    }
+    
+    return tokens;
+}
+
+function highlightCode(code) {
+    const tokens = tokenize(code);
+    let html = '';
+    
+    for (const token of tokens) {
+        const escaped = token.value
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+        
+        if (token.type === 'plain') {
+            html += escaped;
+        } else {
+            html += `<span class="${token.type}">${escaped}</span>`;
+        }
+    }
+    
+    return html;
+}
+
+function updateLineNumbers() {
+    const lines = plainText.split('\n').length;
+    const lineNumbers = document.getElementById('lineNumbers');
+    let html = '';
+    for (let i = 1; i <= lines; i++) {
+        html += `<p>${i}</p>`;
+    }
+    lineNumbers.innerHTML = html;
+    
+    document.getElementById('lineCol').textContent = `Ln ${lines}, Col 1`;
+}
+
+const editor = document.querySelector('.editor');
+const speed_in = document.getElementById("speedIn");
+async function typeText(text) {
+
+    const sessionId = ++typingSession;
+    isTyping = true;
+
+    const codeContent = document.getElementById("codeContent");
+    if (!codeContent) return;
+    window.pywebview.api.start_recoding()
+    for (let i = 0; i < text.length; i++) {
+        if (sessionId !== typingSession) return;
+
+        plainText += text[i];
+        codeContent.innerHTML = highlightCode(plainText);
+        updateLineNumbers()
+        let speed = Number(speed_in.value) || 100
+        editor.scrollTop = editor.scrollHeight;
+        await new Promise(r => setTimeout(r,speed));
+    }
+    isTyping = false;
+    window.pywebview.api.stop_recording()
+}
+
+function startTypingAnimation() {
+    if (isTyping) return;
+    
+    const input = document.getElementById('codeInput');
+    const cp = document.querySelector('.control-panel').style.display = 'none'
+    const text = input.value;
+    
+    if (!text.trim()) return;
+    
+    input.value = '';
+    
+    if (plainText.trim() !== "") {
+        plainText += '\n';
+    }
+    
+    typeText(text);
+}
+
+window.onload = () => {
+    updateLineNumbers();
+};
+
+function getBaseName(path) {
+    return path.replace(/\\/g, '/').split('/').pop();
+}
+
+let tabs_tracking = []
+
+let tabs = document.querySelector('.tabs')
+
+function expand(file_name){
+
+    if(!tabs_tracking.includes(file_name)){
+        tabs.innerHTML += `<div id="${file_name}" class="tab">
+                <span>📄</span>
+                <span onclick="expand('${file_name}')">${file_name}</span>
+                <span onclick="close_tab('${file_name}')" class="tab-close">×</span>
+            </div>`
+
+        tabs_tracking.push(file_name)
+    }
+
+    window.pywebview.api.get_data(file_name).then(res => {
+        isTyping = false;
+        plainText = "";
+        document.getElementById("codeContent").innerHTML = "";
+        updateLineNumbers();
+        typeText(res);
+    });
+}
+
+function close_tab(file_name){
+
+    let tab = document.getElementById(file_name).remove();
+    tabs_tracking = tabs_tracking.filter(names => names != file_name)
+    if(tabs_tracking.length == 0){
+        typeText("")
+    }
+}
+
+let fileTree = document.querySelector('.file-tree')
+
+
+function request_files(){
+
+    window.pywebview.api.get_opened_file().then(res=>{
+
+        fileTree.innerHTML = ""
+        res.forEach(item=>{
+
+            let file_name = getBaseName(item);
+
+            fileTree.innerHTML += `
+                <div class='file-item' onclick="expand('${file_name}')">
+                    <span>${
+                        file_name.endsWith('/') ? '📁' : 
+                        file_name.endsWith('.py') ? '🐍' : 
+                        file_name.endsWith('.html') ? '🌐' : 
+                        file_name.endsWith('.css') ? '🎨' : 
+                        file_name.endsWith('.js') ? '✨' : 
+                        file_name.endsWith('.c') ? '💻' : 
+                        '📁'
+                    }</span>
+                    <span>${file_name}</span>
+                </div>
+            `
+        })
+    })
+}
+</script>
+</body>
+</html>
