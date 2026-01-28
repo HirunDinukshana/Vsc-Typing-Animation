@@ -21,8 +21,6 @@ def on_drop(e):
     if len(files) == 0:
         return
 
-    print(f'Event: {e["type"]}. Dropped files:')
-
     for file in files:
         file_list.append(file.get('pywebviewFullPath'))
         
