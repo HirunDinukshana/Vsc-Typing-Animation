@@ -30,5 +30,5 @@ Clone the repository and install the dependencies:
 ```bash
 git clone "https://github.com/HirunDinukshana/Vsc-Typing-Animation"
 cd VSC-Typing-Animation
-pip install -r requirement.txt
+pip install -r requirements.txt
 python main.py
