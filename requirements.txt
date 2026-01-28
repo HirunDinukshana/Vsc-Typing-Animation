@@ -2,4 +2,4 @@ pygetwindow
 mss
 numpy
 opencv-python
-webview
+pywebview
