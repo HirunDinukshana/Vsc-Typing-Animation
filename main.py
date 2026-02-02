@@ -21,6 +21,8 @@ def on_drop(e):
     if len(files) == 0:
         return
 
+    print(f'Event: {e["type"]}. Dropped files:')
+
     for file in files:
         file_list.append(file.get('pywebviewFullPath'))
         
@@ -42,6 +44,7 @@ class js_API:
         if len(file_list) > 0:
             return file_list
     def get_data(self,file):
+        print(file)
         with open(file,"r",encoding="utf-8") as f:
             return f.read()
     def app_close(self):
@@ -72,4 +75,4 @@ win = webview.create_window(title="VsC Typing Animation",
                             frameless=True,
                             url=os.path.join(os.path.dirname(os.path.abspath(__file__)),'index.html'))
 
-webview.start(start_up,win,debug=False)
+webview.start(start_up,win,debug=True)
