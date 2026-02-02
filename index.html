@@ -660,19 +660,19 @@ let tabs_tracking = []
 
 let tabs = document.querySelector('.tabs')
 
-function expand(file_name){
-
+function expand(file_name,full_path){
+    console.log("FULL",full_path)
     if(!tabs_tracking.includes(file_name)){
         tabs.innerHTML += `<div id="${file_name}" class="tab">
                 <span>📄</span>
-                <span onclick="expand('${file_name}')">${file_name}</span>
+                <span onclick="expand('${full_path}')">${file_name}</span>
                 <span onclick="close_tab('${file_name}')" class="tab-close">×</span>
             </div>`
 
         tabs_tracking.push(file_name)
     }
 
-    window.pywebview.api.get_data(file_name).then(res => {
+    window.pywebview.api.get_data(full_path).then(res => {
         isTyping = false;
         plainText = "";
         document.getElementById("codeContent").innerHTML = "";
@@ -694,7 +694,7 @@ let fileTree = document.querySelector('.file-tree')
 
 
 function request_files(){
-
+    console.log("requested files")
     window.pywebview.api.get_opened_file().then(res=>{
 
         fileTree.innerHTML = ""
@@ -703,7 +703,7 @@ function request_files(){
             let file_name = getBaseName(item);
 
             fileTree.innerHTML += `
-                <div class='file-item' onclick="expand('${file_name}')">
+                <div class='file-item' onclick="expand('${file_name}','${item.replace(/\/|\\/g,'//')}')">
                     <span>${
                         file_name.endsWith('/') ? '📁' : 
                         file_name.endsWith('.py') ? '🐍' : 
